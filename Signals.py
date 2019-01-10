@@ -1,19 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-#signal information
-f = 1000 #Hz signal Frequency
-w = 2*np.pi*f #angular frequency
-T = 1/f #period
-A = 1 #amplitude
-phase = 0 #phase angle (rad)
-duration = 0.1
-start_time = 0
-
-Fs = 7000#sampling frequency
+#default constructor parameters
+_F = 1000
+_A = 1
+_P = 0
+_D = 1
+_L = 1000000
+_S = None
 
 class Waveform:
-    def __init__(self,frequency=1000,amplitude=1,phase=0,duration=1,length=5000,sig=None):
+    def __init__(self,frequency=_F,amplitude=_A,phase=_P,duration=_D,length=_L,sig=_S):
         if sig is None:
             self._f = frequency
             self._phase = phase
@@ -27,7 +24,7 @@ class Waveform:
             self._phase = 0
             self._amplitude = 0
             self._length = len(sig)
-            self._w = 2*np.pi*frequency
+            self._w = 0
             self.t = np.linspace(0,duration,length)
             self.x = sig
     
@@ -38,9 +35,14 @@ class Waveform:
         phase = np.angle(spect)
         return{'magnitude':magnitude,'phase':phase}
     
-    def plot(self):
+    def plot(self,num=5):
         plt.figure()
         plt.plot(self.t,self.x)
+        try:
+            plt.xlim(0,num/self._f)
+        except ZeroDivisionError:
+            pass
+        
         plt.xlabel('Time [s]')
         plt.ylabel('Amplitude')
         plt.title('Time Series Data')
@@ -50,7 +52,7 @@ class Waveform:
     def plot_spectrum(self):
         spect = self.fourier()
         y = spect['magnitude']
-        y = y[0:int(self.length)/2]
+        y = y[0:int(self._length/2)]
         y[1:] = 2*y[1:]
         f = 48000 * np.arange(len(self.t)/2)/len(self.t)
         plt.figure()
@@ -62,7 +64,49 @@ class Waveform:
         return None
     
    #TODO: implement specialized waveform subclasses
+class Sine_Wave(Waveform):
+    def __init__(self,frequency=_F,amplitude=_A,phase=_P,duration=_D,length=_L):
+        super().__init__(frequency,amplitude,phase,duration,length,None)
+        self.x = amplitude * np.sin(self._w * self.t + phase)
 
+class Square_Wave(Waveform):
+    def __init__(self,frequency=_F,amplitude=_A,phase=_P,duration=_D,length=_L):
+        super().__init__(frequency,amplitude,phase,duration,length,None)
+        self.x = np.sign(np.sin(self._w * self.t + phase))
+        
+class Sawtooth_Wave(Waveform):
+    def __init__(self,frequency=_F,amplitude=_A,phase=_P,duration=_D,length=_L):
+        super().__init__(frequency,amplitude,phase,duration,length,None)
+        self.x = 2*amplitude*((self.t*frequency + phase) - np.floor(self.t*frequency + phase) - 0.5)
+        
+class Triangle_Wave(Waveform):
+    def __init__(self,frequency=_F,amplitude=_A,phase=_P,duration=_D,length=_L):
+        super().__init__(frequency,amplitude,phase,duration,length,None)
+        self.x = np.abs(2*amplitude*((self.t*frequency + phase) - np.floor(self.t*frequency + phase) - 0.5))
 
-
-#sampling information
+class Step(Waveform):
+    def __init__(self,amplitude=_A,start=int(_L/2),length=_L):
+        super().__init__(0,amplitude,0,1,length,None)
+        self.x = np.zeros(length)
+        self.x[start:] = amplitude
+        
+class Ramp(Waveform):
+    def __init__(self,amplitude=_A,rate=1,length=_L):
+        super().__init__(0,amplitude,0,1,length,None)
+        self.x = rate * self.t
+        
+class Hat(Waveform):
+    def __init__(self,amplitude=_A,width=int(_L/3),start=int(_L/3),length=_L):
+        if length < start + width:
+            raise ValueError('signal length too short')
+        super().__init__(0,amplitude,0,1,length,None)
+        self.x = np.zeros(length)
+        self.x[start:start+width] = amplitude
+    
+def convolve(sig1,sig2):
+#    if not (isinstance(sig1,Waveform) and isinstance(sig2,Waveform)):
+#        raise TypeError('both signals must of type Waveform')
+#    else:
+    X1 = np.fft.fft(sig1)
+    X2 = np.fft.fft(sig2)
+    return np.fft.ifft(X1*X2)
