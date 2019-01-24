@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #default constructor parameters
-_F = 1000
+_F = 10000
 _A = 1
 _P = 0
 _D = 1
@@ -86,7 +86,7 @@ class Triangle_Wave(Waveform):
 
 class Step(Waveform):
     def __init__(self,amplitude=_A,start=int(_L/2),length=_L):
-        super().__init__(0,amplitude,0,1,length,None)
+        super().__init__(0,amplitude,0,1,length,None) 
         self.x = np.zeros(length)
         self.x[start:] = amplitude
         
@@ -107,6 +107,8 @@ def convolve(sig1,sig2):
 #    if not (isinstance(sig1,Waveform) and isinstance(sig2,Waveform)):
 #        raise TypeError('both signals must of type Waveform')
 #    else:
-    X1 = np.fft.fft(sig1)
-    X2 = np.fft.fft(sig2)
-    return np.fft.ifft(X1*X2)
+    x1 = sig1.x
+    x2 = sig2.x
+    out = np.zeros(len(x1) + len(x2))
+    out = [x1[] x2]
+    return out
