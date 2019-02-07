@@ -102,13 +102,3 @@ class Hat(Waveform):
         super().__init__(0,amplitude,0,1,length,None)
         self.x = np.zeros(length)
         self.x[start:start+width] = amplitude
-    
-def convolve(sig1,sig2):
-#    if not (isinstance(sig1,Waveform) and isinstance(sig2,Waveform)):
-#        raise TypeError('both signals must of type Waveform')
-#    else:
-    x1 = sig1.x
-    x2 = sig2.x
-    out = np.zeros(len(x1) + len(x2))
-    out = [x1[] x2]
-    return out
